@@ -127,7 +127,6 @@ This project is licensed under the MIT License.
 **Rishi Singh**
 
 - GitHub: https://github.com/Rishi04singh
-- LinkedIn: *(Add your LinkedIn profile here)*
 
 ---
 
