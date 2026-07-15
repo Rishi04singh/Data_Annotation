@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YOLO Image Annotator</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo-area">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-vector-square"></i>
+                </div>
+                <div class="logo-text">
+                    <h1>YOLO Annotator</h1>
+                    <span class="subtext">Dataset Labelling Suite</span>
+                </div>
+            </div>
+            
+            <div class="stats-container">
+                <div class="stats-label">
+                    <span id="stats-numbers">0 / 0 Annotated</span>
+                    <span id="stats-percentage">0% Done</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="progress-bar" style="width: 0%;"></div>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <button id="theme-toggle" class="btn-icon" title="Toggle Theme">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Left Sidebar: Images List -->
+            <aside class="sidebar-left">
+                <div class="panel-header">
+                    <h2>Images</h2>
+                    <span class="badge" id="image-count-badge">0</span>
+                </div>
+                
+                <div class="search-filter-box">
+                    <div class="search-input-wrapper">
+                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                        <input type="text" id="image-search" placeholder="Search files...">
+                    </div>
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" data-filter="all">All</button>
+                        <button class="filter-tab" data-filter="pending">Pending</button>
+                        <button class="filter-tab" data-filter="completed">Done</button>
+                    </div>
+                </div>
+
+                <div class="image-list-wrapper">
+                    <ul class="image-list" id="image-list">
+                        <!-- Loaded dynamically -->
+                        <div class="loading-state">
+                            <i class="fa-solid fa-circle-notch fa-spin"></i>
+                            <span>Loading dataset...</span>
+                        </div>
+                    </ul>
+                </div>
+            </aside>
+
+            <!-- Center: Interactive Canvas Editor -->
+            <main class="editor-area">
+                <div class="editor-header">
+                    <div class="file-info">
+                        <span class="current-index" id="current-image-index">Image [0/0]</span>
+                        <h3 class="current-filename" id="current-image-name">No image selected</h3>
+                    </div>
+                    <div class="canvas-tools">
+                        <button id="zoom-out" class="btn-tool" title="Zoom Out"><i class="fa-solid fa-minus"></i></button>
+                        <button id="zoom-reset" class="btn-tool" title="Reset Zoom">100%</button>
+                        <button id="zoom-in" class="btn-tool" title="Zoom In"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                </div>
+
+                <div class="canvas-wrapper" id="canvas-container">
+                    <!-- The Interactive Canvas -->
+                    <canvas id="annotation-canvas"></canvas>
+                    
+                    <!-- Helper overlay to draw annotations -->
+                    <div id="canvas-hint" class="canvas-hint">
+                        <i class="fa-solid fa-crop-simple"></i>
+                        <p>Click and drag to draw a bounding box</p>
+                    </div>
+                </div>
+
+                <!-- Footer / Status Bar inside editor -->
+                <div class="editor-footer">
+                    <div class="cursor-coords" id="cursor-coords">X: 0, Y: 0</div>
+                    <div class="status-msg" id="status-msg">Draw a box, then click Save or press S</div>
+                </div>
+            </main>
+
+            <!-- Right Sidebar: Annotation details & operations -->
+            <aside class="sidebar-right">
+                <!-- Class Manager Section -->
+                <div class="control-section class-manager">
+                    <div class="panel-header">
+                        <h2>Classes</h2>
+                        <button class="btn-small-icon" id="add-class-btn" title="Add Class">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="class-list-container">
+                        <ul class="class-list" id="class-list">
+                            <!-- Loaded dynamically -->
+                        </ul>
+                    </div>
+
+                    <!-- Hidden Class Add Input -->
+                    <div class="class-add-input-wrapper hidden" id="class-add-wrapper">
+                        <input type="text" id="new-class-input" placeholder="Class name...">
+                        <button class="btn-action-small" id="submit-new-class-btn">Add</button>
+                        <button class="btn-action-small cancel" id="cancel-new-class-btn">Cancel</button>
+                    </div>
+                </div>
+
+                <!-- Active Annotations List -->
+                <div class="control-section annotations-panel">
+                    <div class="panel-header">
+                        <h2>Boxes in Image</h2>
+                        <span class="badge" id="boxes-count-badge">0</span>
+                    </div>
+                    <div class="boxes-list-container">
+                        <ul class="boxes-list" id="boxes-list">
+                            <li class="empty-list-msg">No boxes drawn yet</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Action Controls Section -->
+                <div class="control-section action-controls">
+                    <button id="save-btn" class="btn btn-save">
+                        <i class="fa-solid fa-floppy-disk"></i> Save Annotation (S)
+                    </button>
+                    <div class="btn-group-row">
+                        <button id="prev-btn" class="btn btn-nav" title="Previous Image (P)">
+                            <i class="fa-solid fa-arrow-left"></i> Prev
+                        </button>
+                        <button id="skip-btn" class="btn btn-skip" title="Skip Image (N)">
+                            Skip / Next <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                    <button id="reset-btn" class="btn btn-reset">
+                        <i class="fa-solid fa-arrow-rotate-left"></i> Clear Boxes (R)
+                    </button>
+                </div>
+
+                <!-- Keyboard Shortcuts Panel -->
+                <div class="control-section shortcuts-panel">
+                    <h3>Keyboard Shortcuts</h3>
+                    <div class="shortcut-list">
+                        <div class="shortcut-item"><kbd>S</kbd> <span>Save Annotation</span></div>
+                        <div class="shortcut-item"><kbd>N</kbd> <span>Skip / Next Image</span></div>
+                        <div class="shortcut-item"><kbd>P</kbd> <span>Previous Image</span></div>
+                        <div class="shortcut-item"><kbd>R</kbd> <span>Clear Canvas</span></div>
+                        <div class="shortcut-item"><kbd>Delete</kbd> <span>Remove Last Box</span></div>
+                        <div class="shortcut-item"><kbd>Esc</kbd> <span>Cancel Drawing</span></div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+    
+    <!-- Custom script -->
+    <script src="/static/script.js"></script>
+</body>
+</html>
